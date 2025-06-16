@@ -1,0 +1,75 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>Crear encuesta</h2>
+<label class="instruccion">
+    Las preguntas deben poder responderse en una escala del 1 al 5.<br>
+    Ejemplo: “¿Qué tanto te agrada la comida de la cafetería?”
+</label>
+
+<input type="text" id="tituloEncuesta" placeholder="Formulario sin título" class="titulo-encuesta">
+
+<form id="formularioPreguntas">
+</form>
+
+<p id="mensajeError" class="error"></p>
+
+<button class="btn-agregar" onclick="agregarPregunta()">
+    <span>➕ Agregar nueva pregunta</span>
+</button>
+
+
+<button class="btn-guardar" onclick="guardarEncuesta()">
+    Guardar encuesta
+</button>
+
+<script>
+    function agregarPregunta() {
+        const formulario = document.getElementById("formularioPreguntas");
+        const error = document.getElementById("mensajeError");
+        const preguntas = formulario.querySelectorAll(".pregunta");
+
+        if (preguntas.length >= 10) {
+            error.textContent = "Solo se pueden agregar hasta 10 preguntas.";
+            error.style.display = "block";
+            return;
+        }
+
+        error.style.display = "none";
+        const nuevaPregunta = document.createElement("div");
+        nuevaPregunta.classList.add("pregunta");
+        nuevaPregunta.innerHTML = `
+            <label>${preguntas.length + 1}.</label>
+            <input type="text" placeholder="Escriba su pregunta">
+          `;
+        formulario.appendChild(nuevaPregunta);
+    }
+
+    //estoy usando este codigo de prueba jsjs debemos hacerlo real
+    function guardarEncuesta() {
+        const titulo = document.getElementById("tituloEncuesta").value.trim();
+        const preguntas = [...document.querySelectorAll("#formularioPreguntas input")].map(i => i.value.trim());
+        const error = document.getElementById("mensajeError");
+
+        if (!titulo) {
+            error.textContent = "El título no puede estar vacío.";
+            error.style.display = "block";
+            return;
+        }
+
+        if (preguntas.some(p => p === "")) {
+            error.textContent = "No puedes dejar preguntas vacías.";
+            error.style.display = "block";
+            return;
+        }
+
+        error.style.display = "none";
+
+        // Aquí iría el guardado real (servidor )
+        alert("Encuesta guardada exitosamente.");
+        window.location.href = "index.html";
+    }
+</script>

@@ -1,0 +1,65 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>Otras encuestas</h2>
+<label class="instruccion">Selecciona una encuesta para aplicarla</label>
+<div class="lista-encuestas">
+    <div class="tarjeta">
+    
+    </div>
+
+
+
+
+</div>
+
+<script>
+    async function cargarOtrasEncuestas() {
+        try {
+            const response = await fetch('https://encuesta-api.websitos256.com/api/Encuestas/todas', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al obtener las encuestas');
+            }
+
+            const encuestas = await response.json();
+
+            const contenedor = document.querySelector('.lista-encuestas');
+            contenedor.innerHTML = '';
+
+            encuestas.forEach(encuesta => {
+                const tarjeta = document.createElement('div');
+                tarjeta.className = 'tarjeta';
+
+                const contenido = document.createElement('div');
+                contenido.className = 'tarjeta-contenido';
+                contenido.textContent = encuesta.titulo;
+                contenido.onclick = function () {
+                    aplicarEncuesta(encuesta.id);
+                };
+
+                tarjeta.appendChild(contenido);
+                contenedor.appendChild(tarjeta);
+            });
+
+        } catch (error) {
+            console.error(error);
+            alert('No se pudieron cargar las encuestas');
+        }
+    }
+
+    function aplicarEncuesta(idEncuesta) {
+        window.location.href = `/Encuestas/Aplicar?id=${idEncuesta}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', cargarOtrasEncuestas);
+</script>
