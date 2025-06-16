@@ -1,21 +1,13 @@
 ﻿@{
-    Layout = "_LayoutAdmin";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
-<main class="main-content">
-    <div class="container">
-        <h1>Encuestas Registradas</h1>
 
-        <section class="filter-section">
-            <label for="fechaFiltro" class="filter-label">Filtrar por fecha:</label>
-            <input type="date" id="fechaFiltro" />
-            <button id="quitarFiltro" style="display:none;">Quitar filtro</button>
-        </section>
+<h2>Encuestas</h2>
+<label class="instruccion">Selecciona una encuesta para ver detalles</label>
 
-        <div class="survey-list" id="encuestasContainer"></div>
+<div class="lista-encuestas" id="encuestasContainer"></div>
 
-        <a href="/Admin/AgregarEncuestas" class="add-button" title="Agregar nueva encuesta">+</a>
-    </div>
-</main>
+<button class="btn-flotante" onclick="window.location.href='/Admin/AgregarEncuestas'" title="Agregar nueva encuesta">+</button>
 
 <script>
     const token = localStorage.getItem("token");
@@ -34,9 +26,7 @@
                 }
             });
 
-            if (!response.ok) {
-                throw new Error("No se pudieron cargar las encuestas");
-            }
+            if (!response.ok) throw new Error("No se pudieron cargar las encuestas");
 
             const encuestas = await response.json();
             encuestasGlobal = encuestas;
@@ -57,54 +47,24 @@
         }
 
         lista.forEach(encuesta => {
-            const card = document.createElement("div");
-            card.className = "card-surv";
+            const tarjeta = document.createElement("div");
+            tarjeta.className = "tarjeta";
 
-            const fechaISO = new Date(encuesta.fechaCreacion).toISOString().split("T")[0];
+            const contenido = document.createElement("div");
+            contenido.className = "tarjeta-contenido";
+            contenido.textContent = encuesta.titulo;
+            contenido.onclick = function () {
+                verDetallesEncuesta(encuesta.id);
+            };
 
-            card.innerHTML = `
-                <div class="survey-card" data-fecha="${fechaISO}">
-                    <a href="/Admin/VerAlumnosQueRespondieron?id=${encuesta.id}" class="survey-info2">
-                        <strong>${encuesta.titulo}</strong><br />
-                        <small>Creada el ${new Date(encuesta.fechaCreacion).toLocaleDateString()}</small>
-                    </a>
-                    <div class="survey-actions">
-                        <a href="/Admin/EditarEncuestas?id=${encuesta.id}" class="edit-btn" title="Editar encuesta">✏️</a>
-                        <a href="/Admin/EliminarEncuestas?id=${encuesta.id}" class="delete-btn" title="Eliminar encuesta">🗑️</a>
-                    </div>
-                </div>
-            `;
-
-            container.appendChild(card);
+            tarjeta.appendChild(contenido);
+            container.appendChild(tarjeta);
         });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        cargarEncuestas();
+    function verDetallesEncuesta(idEncuesta) {
+        window.location.href = `/Admin/DetallesEncuesta?id=${idEncuesta}`;
+    }
 
-        const fechaInput = document.getElementById('fechaFiltro');
-        const btnQuitarFiltro = document.getElementById('quitarFiltro');
-
-        fechaInput.addEventListener("input", function () {
-            const filtro = this.value;
-            if (filtro) {
-                btnQuitarFiltro.style.display = "inline";
-            } else {
-                btnQuitarFiltro.style.display = "none";
-            }
-
-            const filtradas = encuestasGlobal.filter(e => {
-                const fecha = new Date(e.fechaCreacion).toISOString().split("T")[0];
-                return !filtro || fecha.startsWith(filtro);
-            });
-
-            renderizarEncuestas(filtradas);
-        });
-
-        btnQuitarFiltro.addEventListener("click", () => {
-            fechaInput.value = "";
-            btnQuitarFiltro.style.display = "none";
-            renderizarEncuestas(encuestasGlobal);
-        });
-    });
+    document.addEventListener("DOMContentLoaded", cargarEncuestas);
 </script>

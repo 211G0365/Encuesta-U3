@@ -1,39 +1,27 @@
 ﻿@{
     Layout = "_LayoutAdmin";
 }
-
-<main class="main-content2">
-    <section class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-title">Encuestas respondidas</div>
-            <span class="stat-number" id="stat-respondidas">...</span>
-        </div>
-        <div class="stat-card">
-            <div class="stat-title">Encuestas pendientes</div>
-            <span class="stat-number" id="stat-pendientes">...</span>
-        </div>
-        <div class="stat-card">
-            <div class="stat-title">Promedio de respuestas por encuesta</div>
-            <span class="stat-number" id="stat-promedio">...</span>
+<main class="contenido">
+    <div class="tabla">
+        <div class="tabla-titlebtn">
+            <h3 class="maintitle">Datos de las encuestas</h3>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-title">Total de alumnos entrevistados</div>
-            <span class="stat-number" id="stat-entrevistados">...</span>
+        <div class="contenido-tabla">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Encuesta</th>
+                        <th>Persona aplicando</th>
+                        <th>Total de entrevistados</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-encuestas">
+                    <tr><td colspan="3"><em>Cargando...</em></td></tr>
+                </tbody>
+            </table>
         </div>
-    </section>
-
-    <section class="encuestas-lista">
-        <h2 class="seccion-titulo">Total de Respuestas por encuesta</h2>
-        <ul class="encuestas-ul">
-        </ul>
-    </section>
-
-    <section class="active-users">
-        <h2>Usuarios activos aplicando encuestas</h2>
-        <ul class="user-list" id="lista-usuarios">
-        </ul>
-    </section>
+    </div>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
@@ -48,141 +36,50 @@
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-    //cargar usuarios activos
-    function renderizarUsuariosActivos(usuarios) {
-        const lista = document.getElementById("lista-usuarios");
-        lista.innerHTML = "";
-
-        if (!usuarios || usuarios.length === 0) {
-            lista.innerHTML = "<li><em>No hay usuarios activos</em></li>";
-            return;
-        }
-
-        usuarios.forEach(nombre => {
-            const li = document.createElement("li");
-            li.innerHTML = `<span>${nombre}</span>`;
-            lista.appendChild(li);
-        });
-    }
-
     connection.on("ActualizarEstadisticas", () => {
         console.log("Evento: ActualizarEstadisticas");
-        cargarTotalRespondidas();
-        cargarTotalPendientes();
-        cargarPromedioRespuestas();
-        cargarTotalEntrevistados();
-        cargarEncuestasConRespuestas();
+        cargarTablaEncuestas();
     });
-
-    connection.on("UsuariosActivos", renderizarUsuariosActivos);
 
     connection.start()
         .then(() => {
             console.log("Conectado a SignalR");
-
-            connection.invoke("GetUsuariosActivos")
-                .then(renderizarUsuariosActivos)
-                .catch(err => {
-                    console.error("Error al invocar GetUsuariosActivos:", err);
-                });
+            cargarTablaEncuestas();
         })
         .catch(err => {
             console.error("Error al conectar a SignalR:", err);
         });
 
-    async function cargarTotalRespondidas() {
-        try {
-            const res = await fetch(`${baseApiUrl}/api/encuestas/totalrespondidas`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            document.getElementById("stat-respondidas").innerText = data;
-        } catch (err) {
-            console.error("Error totalrespondidas:", err);
-            document.getElementById("stat-respondidas").innerText = "Error";
-        }
-    }
-
-    async function cargarTotalPendientes() {
-        try {
-            const res = await fetch(`${baseApiUrl}/api/encuestas/totalnorespondidas`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            document.getElementById("stat-pendientes").innerText = data;
-        } catch (err) {
-            console.error("Error totalnorespondidas:", err);
-            document.getElementById("stat-pendientes").innerText = "Error";
-        }
-    }
-
-    async function cargarPromedioRespuestas() {
-        try {
-            const res = await fetch(`${baseApiUrl}/api/encuestas/promedioRespuestasPorEncuesta`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            document.getElementById("stat-promedio").innerText = data;
-        } catch (err) {
-            console.error("Error promedioRespuestasPorEncuesta:", err);
-            document.getElementById("stat-promedio").innerText = "Error";
-        }
-    }
-
-    async function cargarTotalEntrevistados() {
-        try {
-            const res = await fetch(`${baseApiUrl}/api/encuestas/totalAlumnosEntrevistados`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            document.getElementById("stat-entrevistados").innerText = data;
-        } catch (err) {
-            console.error("Error totalAlumnosEntrevistados:", err);
-            document.getElementById("stat-entrevistados").innerText = "Error";
-        }
-    }
-
-    async function cargarEncuestasConRespuestas() {
+    async function cargarTablaEncuestas() {
         try {
             const res = await fetch(`${baseApiUrl}/api/encuestas/EncuestaConTotalRespuestas`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
             const encuestas = await res.json();
-            const listaEncuestas = document.querySelector(".encuestas-ul");
-            listaEncuestas.innerHTML = "";
+
+            const tabla = document.getElementById("tabla-encuestas");
+            tabla.innerHTML = "";
 
             if (encuestas.length === 0) {
-                listaEncuestas.innerHTML = "<li><em>No hay encuestas disponibles</em></li>";
+                tabla.innerHTML = '<tr><td colspan="3"><em>No hay encuestas disponibles</em></td></tr>';
                 return;
             }
 
-            encuestas.slice(0, 10).forEach(encuesta => {
-                const li = document.createElement("li");
-                li.classList.add("encuesta-item");
-                li.innerHTML = `
-                    <span class="nombre-encuesta">${encuesta.nombreEncuesta}</span>
-                    <span class="contador-respuestas">${encuesta.totalRespuestas} respuestas</span>
+            encuestas.forEach(encuesta => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${encuesta.nombreEncuesta}</td>
+                    <td>${encuesta.usuarioNombre || "-"}</td>
+                    <td>${encuesta.totalRespuestas}</td>
                 `;
-                listaEncuestas.appendChild(li);
+                tabla.appendChild(tr);
             });
-
         } catch (err) {
-            console.error("Error al cargar encuestas con respuestas:", err);
+            console.error("Error al cargar datos de encuestas:", err);
+            const tabla = document.getElementById("tabla-encuestas");
+            tabla.innerHTML = '<tr><td colspan="3">Error al cargar datos</td></tr>';
         }
     }
-
-    window.addEventListener("DOMContentLoaded", () => {
-        cargarTotalRespondidas();
-        cargarTotalPendientes();
-        cargarPromedioRespuestas();
-        cargarTotalEntrevistados();
-        cargarEncuestasConRespuestas();
-    });
 </script>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/stylelogin.css" rel="stylesheet"/>
+    <title>Document</title>
+</head>
+<body>
+    <form class="form">
+        <h2 class="titulo">Encuestas</h2>
+        <h2 class="titulo-inicio">Iniciar sesión</h2>
+
+        <div class="form_container">
+            <div class="form_group">
+                <input type="text" id="usuario" class="form_input" placeholder=" ">
+                <label for="usuario" class="form_label">Nombre de usuario</label>
+                <span class="form_line"></span>
+                <!--<label class="form_label2">*Nombre de usuario incorrecto o no existe</label>-->
+            </div>
+            <div class="form_group">
+                <input type="password" id="contrasena" class="form_input" placeholder=" ">
+                <label for="contrasena" class="form_label">Contraseña</label>
+                <span class="form_line"></span>
+                <label class="form_label2" id="error"></label>
+
+            </div>
+            <input type="submit" class="form_submit" value="Ingresar">
+        </div>
+    </form>
+    <script>
+        document.querySelector("form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            document.getElementById("error").textContent = "";
+
+            let dto = {
+                usuario: document.getElementById("usuario").value,
+                contrasena: document.getElementById("contrasena").value
+            };
+
+            try {
+                let response = await fetch("https://encuesta-api.websitos256.com/api/Usuarios/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(dto)
+                });
+
+                if (response.ok) {
+                    const token = await response.text();
+                    sessionStorage.token = token;
+                    //aqui hay que checar si es admin o encuestador, pues se redirigiran a distinitos index
+                    window.location.href = "index.html"; //esto seria para el usuario normal       
+                }
+                else {
+                    const error = await response.text();
+                    document.getElementById("form_label2").textContent = error;
+                }
+            }
+            catch (error) {
+                alert("Error de red o servidor: " + error.message);
+            }
+
+          
+        });
+    </script>
+</body>
+</html>

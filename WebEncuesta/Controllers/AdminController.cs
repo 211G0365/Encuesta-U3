@@ -13,7 +13,12 @@ namespace WebEncuesta.Controllers
             return View();
         }
 
-        public IActionResult AddEncuestas()
+        public IActionResult MisEncuestas()
+        {
+            return View();
+        }
+
+        public IActionResult AgregarEncuestas()
         {
             return View();
         }

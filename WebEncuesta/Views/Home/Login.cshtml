@@ -1,86 +1,85 @@
 ﻿@{
     Layout = null;
 }
-
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Iniciar Sesión</title>
-    <link rel="stylesheet" href="~/Assest/Login.css" /> 
-    <!--Luego ajustar y poner los css y fuentes-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="~/css/stylelogin.css" rel="stylesheet" />
 </head>
 <body>
-    <div class="login-page">
-        <div class="login-box">
-            <div class="login-header">
-                <i class="fas fa-user-circle"></i>
-                <h2>Iniciar Sesión</h2>
+    <form class="form">
+        <h2 class="titulo">Encuestas</h2>
+        <h2 class="titulo-inicio">Iniciar sesión</h2>
+
+        <div class="form_container">
+            <div class="form_group">
+                <input type="text" id="nombre" class="form_input" placeholder=" ">
+                <label for="usuario" class="form_label">Nombre de usuario</label>
+                <label class="form_label2" id="error-usuario"></label>
             </div>
-            <form class="login-form">
-                <div class="form-group input-icon">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="username" name="username" placeholder="Usuario" required />
-                </div>
-                <div class="form-group input-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" name="password" placeholder="Contraseña" required />
-                </div>
-                <button type="submit">Ingresar</button>
-            </form>
+            <div class="form_group">
+                <input type="password" id="contrasena" class="form_input" placeholder=" ">
+                <label for="contrasena" class="form_label">Contraseña</label>
+                <label class="form_label2" id="error"></label>
+
+
+            </div>
+            <input type="submit" class="form_submit" value="Ingresar">
         </div>
-    </div>
+    </form>
+    <script>
+        document.querySelector("form").addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const contrasena = document.getElementById('contrasena').value;
+
+            try {
+                const response = await fetch('https://encuesta-api.websitos256.com/api/Usuario/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        contrasena: contrasena
+                    })
+                });
+
+                if (response.ok) {
+                    const token = await response.json();
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("nombreUsuario");
+                    localStorage.removeItem("rol");
+                    localStorage.removeItem("idUsuario");
+                    localStorage.removeItem('alumnoNombre');
+                    localStorage.setItem("token", token.token);
+                    localStorage.setItem("nombreUsuario", token.nombreUsuario);
+                    localStorage.setItem("rol", token.esAdmin);
+                    localStorage.setItem("idUsuario", token.idUsuario);
+
+
+                    console.log('Rol recibido:', token.esAdmin);
+
+                    const rol = token.esAdmin;
+                    if (rol === 'Admin') {
+                        window.location.href = '/Admin/Index';
+                    } else if (rol === 'Encuestador') {
+                        window.location.href = '/Encuestador/Index';
+                    } else {
+                        document.getElementById('error').textContent = 'Rol desconocido.';
+                    }
+                } else {
+
+                    document.getElementById('error').textContent = 'Usuario o contraseña incorrectos.';
+                }
+            } catch (error) {
+                console.error('Error al intentar loguear:', error);
+                document.getElementById('error').textContent = 'Error en la conexión.';
+            }
+        });
+    </script>
 </body>
 </html>
-
-<script>
-    document.querySelector('.login-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-
-        const response = await fetch("https://encuesta-api.websitos256.com/api/usuario/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                nombre: username,
-                contrasena: password,
-
-            })
-        });
-
-            if (response.ok) {
-        const data = await response.json();
-        console.log("Login success:", data);
-     localStorage.removeItem("idRespuesta");
-     localStorage.removeItem("esAdmin");
-      localStorage.removeItem("idUsuario");
-       localStorage.removeItem("nombre");
-       localStorage.removeItem("token");
-       localStorage.removeItem("nombreAlumno");
-
-
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("esAdmin", data.esAdmin);
-        localStorage.setItem("nombre", data.nombre);
-          localStorage.setItem("idUsuario", data.id);
-    //si es que entra y genera el token, se establece y guarda este, al igual
-            //que identificar si el ingresado esAdmin, o no, para ingresar a la vista correspondiente
-
-        if (data.esAdmin === "Admin") {
-            window.location.href = "/Admin/Index";
-        } else {
-            window.location.href = "/Users/Index";
-        }
-    } else {
-            alert("Usuario o contraseña incorrectos");
-        }
-    });
-</script> 

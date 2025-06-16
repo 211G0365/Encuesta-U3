@@ -1,0 +1,100 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Crear encuesta</h2>
+<label class="instruccion">
+    Las preguntas deben poder responderse en una escala del 1 al 5.<br>
+    Ejemplo: “¿Qué tanto te agrada la comida de la cafetería?”
+</label>
+
+<input type="text" id="tituloEncuesta" placeholder="Formulario sin título" class="titulo-encuesta">
+
+<form id="formularioPreguntas">
+</form>
+
+<p id="mensajeError" class="error"></p>
+
+<button class="btn-agregar" onclick="agregarPregunta()">
+    <span>➕ Agregar nueva pregunta</span>
+</button>
+
+<button class="btn-guardar" onclick="guardarEncuesta()">
+    Guardar encuesta
+</button>
+
+<script>
+    let preguntaCount = 0
+    function agregarPregunta() {
+        const formulario = document.getElementById("formularioPreguntas");
+        const error = document.getElementById("mensajeError");
+        const preguntas = formulario.querySelectorAll(".pregunta");
+
+        if (preguntas.length >= 10) {
+            error.textContent = "Solo se pueden agregar hasta 10 preguntas.";
+            error.style.display = "block";
+            return;
+        }
+
+        error.style.display = "none";
+        preguntaCount++;
+
+        const nuevaPregunta = document.createElement("div");
+        nuevaPregunta.classList.add("pregunta");
+        nuevaPregunta.innerHTML = `
+            <label for="pregunta${preguntaCount}">${preguntaCount}.</label>
+            <input type="text" id="pregunta${preguntaCount}" placeholder="Escriba su pregunta" required>
+        `;
+        formulario.appendChild(nuevaPregunta);
+    }
+    function guardarEncuesta() {
+        const titulo = document.getElementById("tituloEncuesta").value.trim();
+        const preguntas = [...document.querySelectorAll("#formularioPreguntas input")].map(i => i.value.trim());
+        const error = document.getElementById("mensajeError");
+
+        if (!titulo) {
+            error.textContent = "El título no puede estar vacío.";
+            error.style.display = "block";
+            return;
+        }
+
+        if (preguntas.length === 0) {
+            error.textContent = "La encuesta debe tener al menos una pregunta.";
+            error.style.display = "block";
+            return;
+        }
+
+        if (preguntas.some(p => p === "")) {
+            error.textContent = "No puedes dejar preguntas vacías.";
+            error.style.display = "block";
+            return;
+        }
+
+        error.style.display = "none";
+
+        const data = {
+            Titulo: titulo,
+            Preguntas: preguntas.map((pregunta, index) => ({
+                Descripcion: pregunta,
+                NumeroPregunta: index + 1
+            }))
+        };
+
+        fetch("https://encuesta-api.websitos256.com/api/encuestas/crear", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            window.location.href = "/Admin/Encuestas"; 
+        })
+        .catch(error => {
+            console.error("Error al guardar la encuesta:", error);
+            alert("Error al guardar la encuesta: " + error.message);
+        });
+    }
+</script>
