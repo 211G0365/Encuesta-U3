@@ -1,0 +1,83 @@
+﻿@{
+    Layout = "_LayoutAdmin";
+}
+<div class="main-content2">
+    <div class="active-users">
+        <h1>Titulo encuesta</h1>
+        <h4 class="seccion-titulo">Alumnos que respondieron:</h4>
+
+        <div class="alumnos-container">
+            <!-- Tarjeta de alumno -->
+            <div class="alumno-card">
+                <div class="alumno-info">
+                </div>
+                <div class="alumno-acciones">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    async function mostrarAlumnosQueRespondieron() {
+        const params = new URLSearchParams(window.location.search);
+        const idEncuesta = params.get("id");
+        const token = localStorage.getItem("token");
+
+
+        if (!idEncuesta) {
+            console.error("No se encontró el ID de la encuesta en la URL.");
+            return;
+        }
+
+        try {
+           const response = await fetch(`https://encuesta-api.websitos256.com/api/encuestas/${idEncuesta}/alumnos`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error('Error al obtener la lista de alumnos.');
+            }
+
+            const alumnos = await response.json();
+            const alumnosContainer = document.querySelector('.alumnos-container');
+            alumnosContainer.innerHTML = '';
+
+            if (alumnos.length === 0) {
+                alumnosContainer.innerHTML = '<p>No hay alumnos que hayan respondido esta encuesta.</p>';
+                return;
+            }
+
+            alumnos.forEach(alumno => {
+                const alumnoCard = document.createElement('div');
+                alumnoCard.classList.add('alumno-card');
+
+                const alumnoInfo = document.createElement('div');
+                alumnoInfo.classList.add('alumno-info');
+                alumnoInfo.innerHTML = `
+                   <p><strong>Nombre:</strong> ${alumno.nombre}</p>
+                   <p><strong>Número de Control:</strong> ${alumno.numeroControl}</p>
+
+                `;
+
+                const alumnoAcciones = document.createElement('div');
+                alumnoAcciones.classList.add('alumno-acciones');
+                const verRespuestasLink = document.createElement('a');
+                verRespuestasLink.classList.add('btn-primary');
+                verRespuestasLink.href = `/Admin/VerRespuestasDeAlumno?idEncuesta=${idEncuesta}&idAlumno=${alumno.idAlumno}`;
+                verRespuestasLink.textContent = 'Ver Respuestas';
+
+                alumnoAcciones.appendChild(verRespuestasLink);
+                alumnoCard.appendChild(alumnoInfo);
+                alumnoCard.appendChild(alumnoAcciones);
+                alumnosContainer.appendChild(alumnoCard);
+            });
+        } catch (error) {
+            console.error('Error al obtener los alumnos que respondieron:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', mostrarAlumnosQueRespondieron);
+</script>

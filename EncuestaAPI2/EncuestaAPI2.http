@@ -1,0 +1,6 @@
+@EncuestaAPI2_HostAddress = http://localhost:5052
+
+GET {{EncuestaAPI2_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
